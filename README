@@ -1,0 +1,25 @@
+C&C Application
+
+#### server.py ####
+Manage all connected agents, by using keep alive messages, and has the ability
+to dispatch commands for execution to available agents and receive output
+results.
+Setups with commands menu: connections,send,kill,result,exit
+
+#### client.py ####
+Agent that connects to a command controller and waits for incoming command for
+execution.
+
+#### configfile.ini ####
+Client configuration file. Contains host, port and directory for saving
+payloads
+
+#### colors.py ####
+Used colors palette
+
+
+
+Created by Daniel Rechitsky on 24/07/2022
+
+
+

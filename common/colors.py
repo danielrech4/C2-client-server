@@ -1,10 +1,6 @@
 class bcolors:
-    HEADER = '\033[95m'
-    SERVERBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    SUCCESSGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAILRED = '\033[91m'
+    CONNECTION_RESP = '\033[95m'
+    SERVER_BLUE = '\033[94m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
